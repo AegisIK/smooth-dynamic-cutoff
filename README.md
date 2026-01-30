@@ -4,6 +4,9 @@ Open source repository for the paper titled: ``Smooth Dynamic Cutoffs for Machin
 
 Authored by: Kevin Han, Haolin Cong, Bowen Deng, Amir Barati Farimani
 
+Arxiv: https://www.arxiv.org/pdf/2601.21147
+<p align="center">
+      <img width="505.65" height="333.333" alt="image" src="https://github.com/user-attachments/assets/f57aa8e7-fb98-449c-bb40-921df537b7e9">
 
 ## Repo Layout
 The repository contains 4 folders (``mace (MACE)``, ``nequip (Nequip)``, ``orb-models (Orbv3)``, ``matgl (TensorNet)``) corresponding to each of the 4 models trained in the paper. Each repository contains the modified dynamic cutoff (the function is called `fast_prune`) that is enabled typically through an argument in the constructor of each of the models.
