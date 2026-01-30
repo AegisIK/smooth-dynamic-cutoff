@@ -1,0 +1,40 @@
+[project]
+name = "orb-models"
+dynamic = ["version"]
+description = "Foundation models for computational chemistry."
+readme = "README.md"
+requires-python = ">=3.10"
+authors = [{name = "Orbital Materials"}]
+license = "Apache-2.0"
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "cached_path>=1.6.7",
+    "ase>=3.24.0",
+    "numpy>=1.26.4",
+    "scipy>=1.15.1",
+    "torch>=2.6.0, <3.0.0",
+    "dm-tree==0.1.8", # Pinned because of https://github.com/google-deepmind/tree/issues/128
+    "tqdm>=4.66.5",
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["orb_models*"]
+
+[project.urls]
+Homepage = "https://github.com/orbital-materials/orb-models"
+Changelog = "https://github.com/orbital-materials/orb-models/releases"
+Issues = "https://github.com/orbital-materials/orb-models/issues"
+CI = "https://github.com/orbital-materials/orb-models/actions"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.dynamic]
+version = {attr = "orb_models.__version__"}

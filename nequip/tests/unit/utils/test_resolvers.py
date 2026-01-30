@@ -1,0 +1,172 @@
+import pytest
+from typing import Final, List
+from omegaconf import OmegaConf
+
+DATASETS: Final[List[str]] = ["MPTrj", "OMat", "MatPES"]
+CUTOFFS: Final[List[float]] = [
+    4.5,
+    5.0,
+    5.5,
+    6.0,
+    6.5,
+    7.0,
+    7.5,
+    8.0,
+]
+
+REQUIRED_KEYS: Final[List[str]] = [
+    "chemical_symbols",
+    "per_atom_energy_mean",
+    "forces_rms",
+    "isolated_atom_energies",
+    "per_type_forces_rms",
+    "num_neighbors_mean",
+    "per_type_num_neighbors_mean",
+]
+
+
+@pytest.mark.parametrize("cutoff", CUTOFFS)
+@pytest.mark.parametrize("dataset", DATASETS)
+def test_big_dataset_stats_resolver(cutoff, dataset):
+    """Tests `nequip.utils.resolvers.big_dataset_stats` resolver."""
+    # Retrieve the resolved instance
+    cfg = OmegaConf.create(
+        {
+            "dataset_stats": "${big_dataset_stats:" + dataset + "," + str(cutoff) + "}",
+        }
+    )
+
+    dataset_stats = cfg.dataset_stats
+
+    # The resolver should produce a dict-like OmegaConf node
+    assert OmegaConf.is_config(dataset_stats)
+
+    # Required keys
+    for k in REQUIRED_KEYS:
+        assert k in dataset_stats, f"missing key: {k}"
+
+    # chemical_symbols: List[str]
+    chem = dataset_stats.chemical_symbols
+
+    assert OmegaConf.is_list(chem)
+    assert all(isinstance(s, str) for s in chem)
+
+    # Scalars
+    assert isinstance(dataset_stats.per_atom_energy_mean, float)
+    assert isinstance(dataset_stats.forces_rms, float)
+    assert isinstance(dataset_stats.num_neighbors_mean, float)
+
+    # isolated_atom_energies: DictConfig[str, float]
+    shifts = dataset_stats.isolated_atom_energies
+    assert OmegaConf.is_dict(shifts)
+    assert all(isinstance(k, str) for k in shifts)
+    assert all(isinstance(v, float) for v in shifts.values())
+
+    assert set(shifts.keys()) == set(chem), (
+        "All chemical_symbols must be represented in isolated_atom_energies"
+    )
+
+    # per_type_forces_rms: DictConfig[str, float]
+    scales = dataset_stats.per_type_forces_rms
+    assert OmegaConf.is_dict(scales)
+    assert all(isinstance(v, float) for v in scales.values())
+    # This checks both that all keys are string and that all chemical symbols are represented
+    assert set(scales.keys()) == set(chem), (
+        "All chemical_symbols must be represented in per_type_forces_rms"
+    )
+
+    # per_type_num_neighbors_mean: DictConfig[str, float]
+    pt_nn = dataset_stats.per_type_num_neighbors_mean
+    assert OmegaConf.is_dict(pt_nn)
+    assert all(isinstance(v, float) for v in pt_nn.values())
+    assert set(pt_nn.keys()) == set(chem), (
+        "All chemical_symbols must be represented in per_type_num_neighbors_mean"
+    )
+
+    # All per-type dicts must have the same length as chemical_symbols
+    expected_len = len(chem)
+    assert len(shifts) == expected_len
+    assert len(scales) == expected_len
+    assert len(pt_nn) == expected_len
+
+
+def test_concat_lists_resolver():
+    """Tests `nequip.utils.resolvers.concat_lists` resolver."""
+    # test basic concatenation
+    cfg = OmegaConf.create(
+        {
+            "list1": [1, 2, 3],
+            "list2": [4, 5, 6],
+            "concatenated": "${concat_lists:${list1},${list2}}",
+        }
+    )
+
+    result = cfg.concatenated
+    assert result == [1, 2, 3, 4, 5, 6]
+
+    # test with strings
+    cfg_strings = OmegaConf.create(
+        {
+            "list1": ["a", "b"],
+            "list2": ["c", "d"],
+            "concatenated": "${concat_lists:${list1},${list2}}",
+        }
+    )
+
+    result_strings = cfg_strings.concatenated
+    assert result_strings == ["a", "b", "c", "d"]
+
+    # test with mixed types
+    cfg_mixed = OmegaConf.create(
+        {
+            "list1": [1, "a"],
+            "list2": [2.5, True],
+            "concatenated": "${concat_lists:${list1},${list2}}",
+        }
+    )
+
+    result_mixed = cfg_mixed.concatenated
+    assert result_mixed == [1, "a", 2.5, True]
+
+    # test with empty lists
+    cfg_empty = OmegaConf.create(
+        {
+            "list1": [],
+            "list2": [1, 2],
+            "concatenated": "${concat_lists:${list1},${list2}}",
+        }
+    )
+
+    result_empty = cfg_empty.concatenated
+    assert result_empty == [1, 2]
+
+
+def test_concat_lists_resolver_errors():
+    """Tests error cases for `nequip.utils.resolvers.concat_lists` resolver."""
+    # test with non-list first argument
+    cfg = OmegaConf.create(
+        {
+            "not_list": "string",
+            "list2": [1, 2],
+            "concatenated": "${concat_lists:${not_list},${list2}}",
+        }
+    )
+
+    with pytest.raises(
+        ValueError, match="First argument must be a list, tuple, or ListConfig"
+    ):
+        _ = cfg.concatenated
+
+    # test with non-list second argument
+    cfg2 = OmegaConf.create(
+        {
+            "list1": [1, 2],
+            "not_list": 42,
+            "concatenated": "${concat_lists:${list1},${not_list}}",
+        }
+    )
+
+    with pytest.raises(
+        ValueError, match="Second argument must be a list, tuple, or ListConfig"
+    ):
+        _ = cfg2.concatenated

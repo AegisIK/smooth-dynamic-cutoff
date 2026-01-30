@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "nequip"
+dynamic = ["version"]
+description = "NequIP is an open-source code for building E(3)-equivariant interatomic potentials."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {file = "LICENSE"}
+authors = [
+    {name = "The NequIP Developers", email = "allegro-nequip@g.harvard.edu"},
+]
+dependencies = [
+    "torch>=2.2.0",
+    "numpy",
+    "matscipy",
+    "ase",
+    "lmdb",
+    "tqdm",
+    "e3nn>=0.5.6,<0.6.0",
+    "pyyaml",
+    "importlib_metadata; python_version<'3.10'",
+    "hydra-core",
+    "lightning",
+    "torchmetrics>=1.6.0",
+    "requests"
+]
+
+[project.urls]
+Homepage = "https://github.com/mir-group/nequip"
+Repository = "https://github.com/mir-group/nequip.git"
+Documentation = "https://nequip.readthedocs.io/"
+
+[project.scripts]
+nequip-train = "nequip.scripts.train:main"
+nequip-package = "nequip.scripts.package:main"
+nequip-compile = "nequip.scripts.compile:main"
+nequip-prepare-lmp-mliap = "nequip.integrations.lammps_mliap.create_lmp_mliap_file:main"
+
+[tool.setuptools]
+packages = {find = {include = ["nequip", "nequip.*"]}}
+
+[tool.setuptools.package-data]
+# to ensure config file templates for testing is in the package
+"nequip.utils.unittests" = ["*.yaml"]
+"nequip.data.dataset_stats" = ["*.yaml"]
+
+[tool.setuptools.dynamic]  # get version from nequip/_version.py
+version = {attr = "nequip._version.__version__"}
+
+[tool.ruff]
+line-length = 88
+exclude = [
+    ".eggs",
+    "*.egg",
+    "build",
+    "dist",
+    "docs",
+    ".git",
+    "__pycache__",
+    "examples",
+    "tmp"
+]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90"]
+ignore = ["E226", "E501", "E741", "E743", "C901", "E203"]
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"

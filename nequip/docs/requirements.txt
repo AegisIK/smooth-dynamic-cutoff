@@ -1,0 +1,5 @@
+myst-parser
+sphinx_copybutton
+furo
+torch
+pygments-lammps

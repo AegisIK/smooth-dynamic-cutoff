@@ -1,0 +1,97 @@
+run: [train, test]
+
+seed: 1
+cutoff_radius: 5.0
+chemical_symbols: [C, O, H]
+model_type_names: ${chemical_symbols}
+per_edge_type_cutoff:
+  H: 2.0
+  C:
+    H: 4.0
+    C: 3.5
+    O: 3.7
+  O: 3.9
+
+dataloader:
+  _target_: torch.utils.data.DataLoader
+  batch_size: 5
+
+data:
+  _target_: nequip.data.datamodule.sGDML_CCSD_DataModule
+  dataset: aspirin
+  data_source_dir: aspirin_data
+  transforms:
+    - _target_: nequip.data.transforms.NeighborListTransform
+      r_max: ${cutoff_radius}
+    - _target_: nequip.data.transforms.ChemicalSpeciesToAtomTypeMapper
+      chemical_symbols: ${chemical_symbols}
+  trainval_test_subset: [40, 10]
+  train_val_split: [30, 10]
+  seed: ${seed}
+  train_dataloader: ${dataloader}
+  val_dataloader: ${dataloader}
+  test_dataloader: ${dataloader}
+  stats_manager:
+    _target_: nequip.data.CommonDataStatisticsManager
+    type_names: ${model_type_names}
+    dataloader_kwargs:
+      batch_size: 10
+
+trainer:
+  _target_: lightning.Trainer
+  max_epochs: 5
+  check_val_every_n_epoch: 1
+  log_every_n_steps: 5
+  callbacks:
+    - _target_: lightning.pytorch.callbacks.ModelCheckpoint
+      monitor: val0_epoch/weighted_sum
+      dirpath: ${hydra:runtime.output_dir}
+      filename: best
+      save_last: true
+    - _target_: nequip.train.callbacks.TestTimeXYZFileWriter
+      out_file: ${hydra:runtime.output_dir}/test
+      output_fields_from_original_dataset: [total_energy, forces]
+      chemical_symbols: ${chemical_symbols}
+    - _target_: nequip.train.callbacks.LossCoefficientMonitor
+      interval: epoch
+      frequency: 5
+    - _target_: nequip.train.callbacks.SoftAdapt
+      beta: 1.1
+      interval: epoch
+      frequency: 2
+
+training_module:
+  _target_: nequip.train.EMALightningModule
+  loss:
+    _target_: nequip.train.EnergyForceLoss
+    per_atom_energy: true
+    coeffs:
+      total_energy: 1.0
+      forces: 1.0
+  val_metrics:
+    _target_: nequip.train.EnergyForceMetrics
+    coeffs:
+      total_energy_mae: 1.0
+      forces_mae: 1.0
+  test_metrics: ${training_module.val_metrics}
+  optimizer:
+    _target_: torch.optim.Adam
+    lr: 0.01
+  model:
+    _target_: nequip.model.NequIPGNNModel
+    # basic model params
+    seed: ${seed}
+    model_dtype: float32
+    type_names: ${model_type_names}
+    r_max: ${cutoff_radius}
+    # general model params
+    l_max: 2
+    parity: true
+    num_layers: 3
+    num_features: 32
+    radial_mlp_depth: 1
+    radial_mlp_width: 8
+    # data-dependent model params
+    avg_num_neighbors: ${training_data_stats:num_neighbors_mean}
+    per_type_energy_shifts: ${training_data_stats:per_atom_energy_mean}
+    per_type_energy_scales: ${training_data_stats:per_type_forces_rms}
