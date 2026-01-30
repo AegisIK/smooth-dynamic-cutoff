@@ -1,0 +1,222 @@
+[build-system]
+requires = [
+    # pin NumPy version used in the build
+    "oldest-supported-numpy",
+    "setuptools>=58.0.3",
+]
+build-backend = "setuptools.build_meta"
+
+
+[project]
+name = "matgl"
+authors = [
+    { name = "Tsz Wai Ko", email = "t1ko@ucsd.edu" },
+    { name = "Marcel Nassar", email = "marcel.nassar@intel.com" },
+    { name = "Ji Qi", email = "j1qi@ucsd.edu" },
+    { name = "Santiago Miret", email = "santiago.miret@intel.com" },
+    { name = "Eliott Liu", email = "elliottliu17@gmail.com" },
+    { name = "Bowen Deng", email = "bowendeng@berkeley.edu" },
+    { name = "Luis Barroso-Luque", email = "lbluque@berkeley.edu" },
+    { name = "Shyue Ping Ong", email = "ongsp@ucsd.edu" },
+]
+description = "MatGL is a framework for graph deep learning for materials science."
+readme = "README.md"
+requires-python = ">=3.10"
+keywords = [
+    "materials",
+    "interatomic potential",
+    "force field",
+    "science",
+    "property prediction",
+    "AI",
+    "machine learning",
+    "graph",
+    "deep learning",
+]
+license = { text = "BSD-3-Clause" }
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Scientific/Engineering :: Physics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+dependencies = [
+    "ase",
+    "dgl<=2.1.0; sys.platform == 'win32'",
+    "dgl<=2.2.0; sys.platform == 'darwin'",
+    "torch<=2.2.0; sys.platform != 'linux'",
+    "torchdata<=0.7.1; sys.platform != 'linux'",
+    "dgl<=2.4.0; sys.platform == 'linux'",
+    "torch<=2.4.0; sys.platform == 'linux'",
+    "torchdata<=0.8.0; sys.platform == 'linux'",
+    "pymatgen",
+    "lightning<=2.5.1.post0",
+    "pydantic",
+    "boto3",
+    "numpy<2.0",
+    "torch-geometric>=2.6.1"
+]
+version = "1.2.7"
+
+[tool.uv.sources]
+dgl = [
+  { index = "dgl-linux", marker = "sys_platform == 'linux'" },
+  { index = "dgl-non-linux", marker = "sys_platform != 'linux'" },
+]
+
+[[tool.uv.index]]
+name = "dgl-linux"
+url = "https://data.dgl.ai/wheels/torch-2.4/repo.html"
+format = "flat"
+
+[[tool.uv.index]]
+name = "dgl-non-linux"
+url = "https://pypi.org/simple/"
+
+[project.scripts]
+mgl = "matgl.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+include = ["matgl", "matgl.*"]
+
+[tool.setuptools.package-data]
+matgl = ["py.typed"]
+"matgl.utils" = ["sb_roots.npy"]
+
+
+[tool.black]
+line-length = 120
+target-version = ['py312']
+include = '\.pyi?$'
+exclude = '''
+(
+  /(
+      \.eggs         # exclude a few common directories in the
+    | \.git          # root of the project
+    | \.hg
+    | \.mypy_cache
+    | \.tox
+    | \.venv
+    | _build
+    | buck-out
+    | build
+    | dist
+    | test_files
+  )/
+)
+'''
+
+[tool.ruff]
+line-length = 120
+lint.select = [
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "D", # pydocstyle
+    "E", # pycodestyle error
+    "EXE", # flake8-executable
+    "F", # pyflakes
+    "I", # isort
+    "ICN", # flake8-import-conventions
+    "ISC", # flake8-implicit-str-concat
+    "PD", # pandas-vet
+    "PERF", # perflint
+    "PIE", # flake8-pie
+    "PL", # pylint
+    "PT", # flake8-pytest-style
+    "PYI", # flakes8-pyi
+    "Q", # flake8-quotes
+    "RET", # flake8-return
+    "RSE", # flake8-raise
+    "RUF", # Ruff-specific rules
+    "SIM", # flake8-simplify
+    "SLOT", # flake8-slots
+    "TCH", # flake8-type-checking
+    "TID", # tidy imports
+    "TID", # flake8-tidy-imports
+    "UP", # pyupgrade
+    "W", # pycodestyle warning
+    "YTT", # flake8-2020
+]
+lint.ignore = [
+    "B019", # functools.lru_cache on methods can lead to memory leaks
+    "D105", # Missing docstring in magic method
+    "D205", # 1 blank line required between summary line and description
+    "D212", # Multi-line docstring summary should start at the first line
+    "PD901", # df-bad-var-name
+    "PERF203", # try-except-in-loop
+    "PLR", # pylint refactor
+    "PLW0603", # Using the global statement to update variables is discouraged
+    "PLW2901", # redefined-loop-name
+    "RET504", # unnecessary-assign
+    "SIM105", # Use contextlib.suppress(OSError) instead of try-except-pass
+]
+lint.pydocstyle.convention = "google"
+lint.isort.required-imports = ["from __future__ import annotations"]
+
+[tool.ruff.lint.per-file-ignores]
+"__init__.py" = ["F401"]
+"tests/**/*" = ["D", "PERF"]
+"docs/**/*" = ["D"]
+"examples/**/*" = ["D"]
+
+[tool.pytest.ini_options]
+addopts = "--durations=30 --quiet -rXs --color=yes -p no:warnings"
+
+[tool.mypy]
+ignore_missing_imports = true
+no_implicit_optional = false
+exclude = ['examples', 'tests']
+
+[[tool.mypy.overrides]]
+module = ["requests.*", "tabulate.*"]
+ignore_missing_imports = true
+
+[tool.coverage.run]
+relative_files = true
+
+[tool.coverage.report]
+exclude_lines = [
+    "@deprecated",
+    "def __repr__",
+    "except PackageNotFoundError:",
+    "if 0:",
+    "if TYPE_CHECKING:",
+    "if typing.TYPE_CHECKING:",
+    "if __name__ == .__main__.:",
+    "if self.debug:",
+    "if settings.DEBUG",
+    "input",
+    "logging.basicConfig",
+    "pragma: no cover",
+    "raise AssertionError",
+    "raise NotImplementedError",
+    "raise RuntimeError",
+]
+
+[dependency-groups]
+dev = [
+    "coverage>=7.7.1",
+    "docutils>=0.21.2",
+    "invoke>=2.2.0",
+    "jupyter>=1.1.1",
+    "myst-parser>=4.0.1",
+    "pre-commit>=4.2.0",
+    "pytest>=8.3.5",
+    "pytest-cov>=6.0.0",
+    "requests>=2.32.3",
+    "sphinx>=8.1.3",
+    "sphinx-markdown-builder>=0.6.8",
+]
+lint = [
+    "mypy>=1.15.0",
+    "ruff>=0.11.2",
+]

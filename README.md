@@ -2,6 +2,9 @@
 
 Open source repository for the paper titled: ``Smooth Dynamic Cutoffs for Machine Learning Interatomic Potentials``
 
+Authored by: Kevin Han, Haolin Cong, Bowen Deng, Amir Barati Farimani
+
+
 ## Repo Layout
 The repository contains 4 folders (``mace (MACE)``, ``nequip (Nequip)``, ``orb-models (Orbv3)``, ``matgl (TensorNet)``) corresponding to each of the 4 models trained in the paper. Each repository contains the modified dynamic cutoff (the function is called `fast_prune`) that is enabled typically through an argument in the constructor of each of the models.
 
@@ -12,10 +15,14 @@ Due to dependency conflicts between repositories of the 4 models, we recommend c
 
 ⚠️⚠️ **We highly recommend you take a look at the structure of the training code and modify it to fit your needs.** ⚠️⚠️
 
-## MACE
-Training scripts for both the MatPES and MD22 configurations are found in `training_mace`. You will have to modify the scripts with your specific file paths. The code that has to be changed is labeled with `[INSERT ___ HERE]`. Information on creating the datasets for ingestion are found in the MACE docs: https://mace-docs.readthedocs.io/en/latest/guide/training.html.
+We also recommend evaluating all models using the provided ASE Calculator interface.
 
-Note that we did modify the MACE training script as well as the graph construction and architecture in orde to input the dynamic cutoff parameters into the training pipeline. For the MatPES dataset, we recommend evaluating the MACE model via ASE. For the MD22 dataset, the training logs can be used to read off validation results.
+## MACE
+* Training scripts for both the MatPES and MD22 configurations are found in `training_mace`. 
+* You will have to modify the scripts with your specific file paths. The code that has to be changed is labeled with `[INSERT ___ HERE]`. 
+* Information on creating the datasets for ingestion are found in the MACE docs: https://mace-docs.readthedocs.io/en/latest/guide/training.html.
+
+* Note that we did modify the MACE training script as well as the graph construction and architecture in orde to input the dynamic cutoff parameters into the training pipeline. For the MatPES dataset, we recommend evaluating the MACE model via ASE. For the MD22 dataset, the training logs can be used to read off validation results.
 
 ## Nequip
 * Training scripts are found in `training_nequip`. 
@@ -34,7 +41,8 @@ Note that we did modify the MACE training script as well as the graph constructi
 * We use the DGL version of TensorNet. Note that DGL is no longer being supported and does not support later versions of PyTorch.
 * Install DGL and PyTorch: https://www.dgl.ai/pages/start.html
 * Run `pip install -e .` on the `matgl` folder.
-* 
+* Training requires creating an MGLDataset. Details on creating this dataset are found here: https://matgl.ai/tutorials%2FTraining%20a%20M3GNet%20Potential%20with%20PyTorch%20Lightning.html
+* Training on the MatPES dataset are found in the `train_tensornet.py` file. Training with MD22 are found in `train_tensornet_md22.py`.
 
 ## Citing Us
 If you find our work interesting and useful, please cite us here: 
