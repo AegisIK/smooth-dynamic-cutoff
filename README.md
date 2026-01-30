@@ -58,5 +58,5 @@ If you find our work interesting and useful, please cite us here:
 }
 ```
 
-## Questions
-If you have any questions, feel free to either raise a GitHub issue on the repoisitory or email `kevinhan@cmu.edu`. Emailing directly will most likely get a faster response!
+## Questions/Contact Us
+If you have any questions, feel free to either raise a GitHub issue on the repoisitory or email `kevinhan@cmu.edu`. The development of this work took place over 4 different servers so there may be discrepancies with versioning. If there is some discrepancy, please do let us know ASAP. Emailing directly will most likely get the fastest response! 
